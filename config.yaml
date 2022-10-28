@@ -1,0 +1,22 @@
+http:
+  host: "127.0.0.1"
+  port: 8890
+redis:
+  host: "127.0.0.1"
+  port: 6379
+  db: 2
+  pass: "bkcmdb"
+mongo:
+  host: 127.0.0.1
+  port: 27017
+  db: "dpm"
+  user: ""
+  pass: ""
+login:
+  version: "dpm"
+session:
+  name: "session"
+common:
+  inituser:
+    username: "admin"
+    password: "123"
