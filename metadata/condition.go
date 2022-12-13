@@ -1,5 +1,7 @@
 package metadata
 
+type Filters map[string]interface{}
+
 type Page struct {
 	Limit  int64 `json:"limit"`
 	Offset int64 `json:"offset"`
@@ -7,5 +9,5 @@ type Page struct {
 
 type Condition struct {
 	Page    `json:",inline"`
-	Filters map[string]interface{} `json:"filters"`
+	Filters Filters `json:"filters"`
 }

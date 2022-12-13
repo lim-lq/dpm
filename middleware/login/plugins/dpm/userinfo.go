@@ -22,7 +22,7 @@ func (u *user) IsAuthed(c *gin.Context) bool {
 }
 
 func (u *user) GetLoginUrl(c *gin.Context) string {
-	return "/login"
+	return "/api/login"
 }
 func (u *user) GetUser(g *gin.Context) (*models.Account, error) {
 	return nil, nil

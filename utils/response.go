@@ -7,22 +7,30 @@ import (
 	"github.com/lim-lq/dpm/metadata"
 )
 
-func ResponseOK(c *gin.Context, msg interface{}) {
-	c.JSON(http.StatusOK, metadata.Response{
+func baseResponse(c *gin.Context, httpStatus int, msg interface{}, code int64) {
+	var status string
+	if code == 0 {
+		status = "success"
+	} else {
+		status = "failure"
+	}
+	c.JSON(httpStatus, metadata.Response{
 		BaseResponse: metadata.BaseResponse{
-			Code:   0,
-			Status: "success",
+			Code:   code,
+			Status: status,
 		},
 		Info: msg,
 	})
 }
 
+func ResponseOK(c *gin.Context, msg interface{}) {
+	baseResponse(c, http.StatusOK, msg, 0)
+}
+
 func ResponseError(c *gin.Context, msg interface{}, errcode int64) {
-	c.JSON(http.StatusOK, metadata.Response{
-		BaseResponse: metadata.BaseResponse{
-			Code:   errcode,
-			Status: "failure",
-		},
-		Info: msg,
-	})
+	baseResponse(c, http.StatusOK, msg, errcode)
+}
+
+func UnauthedError(c *gin.Context, msg interface{}) {
+	baseResponse(c, http.StatusUnauthorized, msg, -1)
 }

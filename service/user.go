@@ -3,13 +3,11 @@ package service
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/lim-lq/dpm/core"
 	"github.com/lim-lq/dpm/core/config"
-	"github.com/lim-lq/dpm/metadata"
+	"github.com/lim-lq/dpm/errcode"
 	"github.com/lim-lq/dpm/models"
 	"github.com/lim-lq/dpm/utils"
 )
@@ -26,21 +24,9 @@ func UserInfo(c *gin.Context) {
 	userInfo := models.Account{}
 	err := json.Unmarshal([]byte(userInfoStr), &userInfo)
 	if err != nil {
-		c.JSON(http.StatusOK, metadata.Response{
-			BaseResponse: metadata.BaseResponse{
-				Code:   1,
-				Status: "failure",
-			},
-			Info: "Get user info failure",
-		})
+		utils.ResponseError(c, "Get user info failure", 1)
 	} else {
-		c.JSON(http.StatusOK, metadata.Response{
-			BaseResponse: metadata.BaseResponse{
-				Code:   0,
-				Status: "success",
-			},
-			Info: userInfo,
-		})
+		utils.ResponseOK(c, userInfo)
 	}
 }
 
@@ -51,22 +37,40 @@ func Login(c *gin.Context) {
 		utils.ResponseError(c, fmt.Sprintf("parameter error - %v", err), 1)
 		return
 	}
-	if logininfo.Username == "admin" && logininfo.Password == "123456" {
-		sessionid, _ := c.Cookie(config.SessionName)
-		rediscli := core.GetRedisClient()
-		infoBytes, err := json.Marshal(&logininfo)
-		if err != nil {
-			utils.ResponseError(c, fmt.Sprintf("login error - %v", err), 1)
-			return
-		}
-		err = rediscli.Set(sessionid, string(infoBytes), 3600*time.Second)
-		if err != nil {
-			utils.ResponseError(c, fmt.Sprintf("login error - %v", err), 1)
-			return
-		}
-	} else {
-		utils.ResponseError(c, "username or password error", 1)
+	user := models.AccountManager()
+	err = user.SearchByName(c, logininfo.Username)
+	if err != nil {
+		utils.ResponseError(c, "用户名或密码错误", errcode.LOGIN_INFO_ERROR)
 		return
 	}
-	utils.ResponseOK(c, "Login success")
+	passPlain, err := core.GetRsaClient().Decrypt(logininfo.Password)
+	if err != nil {
+		utils.ResponseError(c, fmt.Sprintf("rsa解密密码失败 - %v", err), errcode.PARSE_PARAMETER_ERROR)
+		return
+	}
+	// 对密码做md5加密比较
+
+	if utils.StringToMd5String(passPlain) != user.Password {
+		utils.ResponseError(c, "用户名或密码错误", errcode.LOGIN_INFO_ERROR)
+		return
+	}
+	// sessionid, _ := c.Cookie(config.SessionName)
+	// rediscli := core.GetRedisClient()
+	// infoBytes, err := json.Marshal(&logininfo)
+	// if err != nil {
+	// 	utils.ResponseError(c, fmt.Sprintf("login error - %v", err), 1)
+	// 	return
+	// }
+	// err = rediscli.Set(sessionid, string(infoBytes), 3600*time.Second)
+	// if err != nil {
+	// 	utils.ResponseError(c, fmt.Sprintf("login error - %v", err), 1)
+	// 	return
+	// }
+	/* 生成jwt token */
+	token, err := core.NewToken(user.Username)
+	if err != nil {
+		utils.ResponseError(c, fmt.Sprintf("生成token失败 - %v", err), errcode.GEN_TOKEN_FAILURE)
+		return
+	}
+	utils.ResponseOK(c, map[string]string{"token": token})
 }
