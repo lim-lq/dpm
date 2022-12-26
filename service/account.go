@@ -50,6 +50,11 @@ func CreateAccount(c *gin.Context) {
 	utils.ResponseOK(c, "Success")
 }
 
+func AccountInfo(c *gin.Context) {
+	user := c.MustGet("user").(*models.AccountInfo)
+	utils.ResponseOK(c, user)
+}
+
 func UpdateAccount(c *gin.Context) {
 	accID, err := strconv.ParseInt(c.Param("accountid"), 10, 64)
 	if err != nil {

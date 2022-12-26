@@ -1,0 +1,79 @@
+[
+    {
+        "name": "USER.ADD",
+        "desc": "创建用户",
+        "cate_en": "USER",
+        "cate_ch": "用户",
+        "method": "POST",
+        "url": "/api/accounts"
+    },
+    {
+        "name": "USER.EDIT",
+        "desc": "编辑用户",
+        "cate_en": "USER",
+        "cate_ch": "用户",
+        "method": "PUT",
+        "url": "/api/accounts/:accountid"
+    },
+    {
+        "name": "USER.DELETE",
+        "desc": "删除用户",
+        "cate_en": "USER",
+        "cate_ch": "用户",
+        "method": "DELETE",
+        "url": "/api/accounts"
+    },
+    {
+        "name": "USER.QUERY",
+        "desc": "查询用户",
+        "cate_en": "USER",
+        "cate_ch": "用户",
+        "method": "POST",
+        "url": "/api/accounts/search"
+    },
+    {
+        "name": "PROJECT.QUERY",
+        "desc": "查询项目",
+        "cate_en": "PROJECT",
+        "cate_ch": "项目",
+        "need_resource": true,
+        "method": "POST",
+        "url": "/api/projects/search"
+    },
+    {
+        "name": "PROJECT.DETAIL",
+        "desc": "获取项目详情",
+        "cate_en": "PROJECT",
+        "cate_ch": "项目",
+        "need_resource": true,
+        "method": "GET",
+        "url": "/api/projects/:projectid"
+    },
+    {
+        "name": "PROJECT.ADD",
+        "desc": "创建项目",
+        "cate_en": "PROJECT",
+        "cate_ch": "项目",
+        "need_resource": false,
+        "method": "POST",
+        "url": "/api/projects"
+    },
+    {
+        "name": "PROJECT.EDIT",
+        "desc": "编辑项目",
+        "cate_en": "PROJECT",
+        "cate_ch": "项目",
+        "need_resource": true,
+        "method": "PUT",
+        "url": "/api/projects"
+    },
+    {
+        "name": "PROJECT.DELETE",
+        "desc": "删除项目",
+        "cate_en": "PROJECT",
+        "cate_ch": "项目",
+        "need_resource": true,
+        "method": "DELETE",
+        "url": "/api/projects"
+    }
+]

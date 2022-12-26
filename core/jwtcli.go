@@ -17,6 +17,7 @@ func NewToken(user string) (string, error) {
 	// })
 	claims := jwt.RegisteredClaims{
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour * 30)),
+		Subject:   user,
 		Issuer:    "DPM",
 	}
 
@@ -24,16 +25,15 @@ func NewToken(user string) (string, error) {
 	return token.SignedString(dpmSecret)
 }
 
-func CheckToken(tokenString string) error {
+func CheckToken(tokenString string) (string, error) {
 	tokenStr := strings.TrimSpace(tokenString)
 	token, err := jwt.ParseWithClaims(tokenStr, &jwt.RegisteredClaims{}, func(t *jwt.Token) (interface{}, error) {
 		return dpmSecret, nil
 	})
 	if claims, ok := token.Claims.(*jwt.RegisteredClaims); ok && token.Valid {
 		fmt.Println(claims.Issuer)
+		return claims.Subject, nil
 	} else {
-		return err
+		return "", err
 	}
-
-	return nil
 }

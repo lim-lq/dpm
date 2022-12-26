@@ -34,3 +34,7 @@ func ResponseError(c *gin.Context, msg interface{}, errcode int64) {
 func UnauthedError(c *gin.Context, msg interface{}) {
 	baseResponse(c, http.StatusUnauthorized, msg, -1)
 }
+
+func ForbiddenError(c *gin.Context, msg interface{}) {
+	baseResponse(c, http.StatusForbidden, msg, -1)
+}

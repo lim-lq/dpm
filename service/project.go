@@ -25,6 +25,21 @@ func ProjectList(c *gin.Context) {
 	}
 }
 
+func CreateProject(c *gin.Context) {
+	project := models.ProjectModel{}
+	err := c.ShouldBind(&project)
+	if err != nil {
+		utils.ResponseError(c, fmt.Sprintf("Parse parameter error - %v", err), errcode.PARSE_PARAMETER_ERROR)
+		return
+	}
+	err = project.Create(c)
+	if err != nil {
+		utils.ResponseError(c, fmt.Sprintf("Create project error - %v", err), errcode.CREATE_PROJECT_ERROR)
+		return
+	}
+	utils.ResponseOK(c, "Success")
+}
+
 func ProjectDetail(c *gin.Context) {
 	projectid, err := strconv.ParseInt(c.Param("projectid"), 10, 64)
 	if err != nil {

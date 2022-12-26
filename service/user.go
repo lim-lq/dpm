@@ -54,7 +54,14 @@ func Login(c *gin.Context) {
 		utils.ResponseError(c, "用户名或密码错误", errcode.LOGIN_INFO_ERROR)
 		return
 	}
-	// sessionid, _ := c.Cookie(config.SessionName)
+
+	/* 生成jwt token */
+	token, err := core.NewToken(user.Username)
+	if err != nil {
+		utils.ResponseError(c, fmt.Sprintf("生成token失败 - %v", err), errcode.GEN_TOKEN_FAILURE)
+		return
+	}
+	// // 缓存token对应的用户信息
 	// rediscli := core.GetRedisClient()
 	// infoBytes, err := json.Marshal(&logininfo)
 	// if err != nil {
@@ -66,11 +73,5 @@ func Login(c *gin.Context) {
 	// 	utils.ResponseError(c, fmt.Sprintf("login error - %v", err), 1)
 	// 	return
 	// }
-	/* 生成jwt token */
-	token, err := core.NewToken(user.Username)
-	if err != nil {
-		utils.ResponseError(c, fmt.Sprintf("生成token失败 - %v", err), errcode.GEN_TOKEN_FAILURE)
-		return
-	}
 	utils.ResponseOK(c, map[string]string{"token": token})
 }

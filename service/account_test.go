@@ -69,7 +69,7 @@ func (h *HttpClient) Do() ([]byte, error) {
 		return nil, err
 	}
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJEUE0iLCJleHAiOjE2NzM1MTEzOTV9.j8fcphDd3bPQK_7onJiOUMIgPLV1Vuz2m9cZobf9GDE")
+	req.Header.Add("Authorization", "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJEUE0iLCJzdWIiOiJhZG1pbiIsImV4cCI6MTY3NDYzMzQ3OH0.RdMm87QjwV--wPHr79-pop3fu1FLletXo_DNOXserME")
 	h.req = req
 	resp, err := h.cli.Do(h.req)
 	if err != nil {
@@ -94,6 +94,14 @@ func encryptPass(pass string) (string, error) {
 	return core.GetRsaClient().EncryptByPubkey(pubStr, pass)
 }
 
+func TestEncryptPass(t *testing.T) {
+	cipher, err := encryptPass("67890")
+	if err != nil {
+		t.Fatalf("encrypt password error: %v", err)
+	}
+	t.Log(cipher)
+}
+
 func TestCreateAccount(t *testing.T) {
 	cipher, err := encryptPass("67890")
 	if err != nil {
@@ -101,7 +109,7 @@ func TestCreateAccount(t *testing.T) {
 	}
 	t.Log(cipher)
 	account := models.Account{
-		Username: "lcq",
+		Username: "lcq001",
 		Password: cipher,
 	}
 	client := GetHttpClient()
@@ -122,13 +130,13 @@ func TestCreateAccount(t *testing.T) {
 }
 
 func TestUpdateAccount(t *testing.T) {
-	account := metadata.MapStr{"id": "1", "is_admin": true}
+	account := metadata.MapStr{"id": 1, "is_admin": true}
 	httpCli := GetHttpClient()
 	bodyBytes, err := json.Marshal(account)
 	if err != nil {
 		t.Fatalf("json marshal error: %v", err)
 	}
-	respBytes, err := httpCli.Put(fmt.Sprintf("%s/accounts/0", Api), bodyBytes).Do()
+	respBytes, err := httpCli.Put(fmt.Sprintf("%s/accounts/1", Api), bodyBytes).Do()
 	if err != nil {
 		t.Fatalf("Update account error: %v", err)
 	}

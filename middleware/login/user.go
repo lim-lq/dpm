@@ -10,6 +10,7 @@ import (
 	"github.com/lim-lq/dpm/core/config"
 	"github.com/lim-lq/dpm/middleware/login/plugins"
 	_ "github.com/lim-lq/dpm/middleware/login/plugins/register"
+	"github.com/lim-lq/dpm/models"
 	"github.com/lim-lq/dpm/utils"
 )
 
@@ -21,6 +22,15 @@ func newSessionID() string {
 		bytes[k] = alphabet[v%byte(len(alphabet))]
 	}
 	return string(bytes)
+}
+
+func checkPrivileges(c *gin.Context) bool {
+	user := c.MustGet("user").(*models.AccountInfo)
+	if user.IsAdmin {
+		return true
+	}
+	// 校验url
+	return true
 }
 
 func IsAuthed() gin.HandlerFunc {
@@ -41,9 +51,23 @@ func IsAuthed() gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		err := core.CheckToken(bearer[7:])
+		username, err := core.CheckToken(bearer[7:])
 		if err != nil {
 			utils.UnauthedError(c, fmt.Sprintf("Token 无效 err - %v", err))
+			c.Abort()
+			return
+		}
+		// 获取用户信息
+		accountMgr := models.AccountManager()
+		accountInfo, err := accountMgr.GetInfoByUsername(c, username)
+		if err != nil {
+			utils.UnauthedError(c, fmt.Sprintf("获取用户信息失败 - %v", err))
+			c.Abort()
+			return
+		}
+		c.Set("user", accountInfo)
+		if !checkPrivileges(c) {
+			utils.ForbiddenError(c, "没有权限访问")
 			c.Abort()
 			return
 		}

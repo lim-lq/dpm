@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"time"
 
 	"github.com/lim-lq/dpm/core"
 	"github.com/lim-lq/dpm/metadata"
@@ -21,6 +22,18 @@ func ProjectManager() *ProjectModel {
 	return &ProjectModel{}
 }
 
+func (p *ProjectModel) Create(ctx context.Context) error {
+	mongocli := core.GetMongoClient()
+	id, err := mongocli.NextSequence(ctx, projectCol)
+	if err != nil {
+		return err
+	}
+	p.Id = id
+	p.CreateTime.Time = time.Now()
+	p.UpdateTime.Time = time.Now()
+	return mongocli.InsertOne(ctx, projectCol, p)
+}
+
 func (p *ProjectModel) GetList(ctx context.Context, cond *metadata.Condition) ([]ProjectModel, error) {
 	projects := []ProjectModel{}
 	mongocli := core.GetMongoClient()
@@ -34,7 +47,7 @@ func (p *ProjectModel) GetDetail(ctx context.Context, cond *metadata.Condition) 
 	return db.FindOne(ctx, projectCol, cond, p)
 }
 
-func (p *ProjectModel) Update(ctx context.Context, cond *metadata.Condition, data *ProjectModel) error {
+func (p *ProjectModel) Update(ctx context.Context, cond *metadata.Condition, data metadata.MapStr) error {
 	db := core.GetMongoClient()
 	return db.Update(ctx, projectCol, cond, data)
 }

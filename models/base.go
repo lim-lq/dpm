@@ -1,7 +1,7 @@
 package models
 
 import (
-	"time"
+	"encoding/json"
 
 	"github.com/lim-lq/dpm/metadata"
 	"go.mongodb.org/mongo-driver/bson"
@@ -15,9 +15,16 @@ import (
 // }
 
 type BaseModel struct {
-	Id         int64     `json:"id" bson:"id"`
-	CreateTime time.Time `json:"createTime" bson:"createTime"`
-	UpdateTime time.Time `json:"updateTime" bson:"updateTime"`
+	Id         int64            `json:"id" bson:"id"`
+	CreateTime metadata.DpmTime `json:"createTime" bson:"createTime"`
+	UpdateTime metadata.DpmTime `json:"updateTime" bson:"updateTime"`
+}
+
+func (b *BaseModel) ToMap() metadata.MapStr {
+	result := metadata.MapStr{}
+	jsonBytes, _ := json.Marshal(b)
+	json.Unmarshal(jsonBytes, &result)
+	return result
 }
 
 func TransSetUpdate(data metadata.MapStr) *bson.D {

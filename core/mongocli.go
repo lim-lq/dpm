@@ -35,6 +35,14 @@ func GetMongoClient() *mongoClient {
 	return mongocli
 }
 
+func TransSetUpdate(data metadata.MapStr) *bson.D {
+	update := bson.D{}
+	for filed, value := range data {
+		update = append(update, bson.E{Key: filed, Value: value})
+	}
+	return &update
+}
+
 func InitMongo() {
 	host := config.GetString("mongo.host")
 	port := config.GetInt("mongo.port")
@@ -125,12 +133,13 @@ func (m *mongoClient) InsertMany(ctx context.Context, col string, data []interfa
 
 func (m *mongoClient) Delete(ctx context.Context, col string, cond *metadata.Condition) error {
 	colObj := m.cli.Database(m.DB).Collection(col)
-	_, err := colObj.DeleteMany(ctx, cond)
+	_, err := colObj.DeleteMany(ctx, cond.Filters)
 	return err
 }
 
-func (m *mongoClient) Update(ctx context.Context, col string, cond *metadata.Condition, data interface{}) error {
+func (m *mongoClient) Update(ctx context.Context, col string, cond *metadata.Condition, data metadata.MapStr) error {
 	colObj := m.cli.Database(m.DB).Collection(col)
-	_, err := colObj.UpdateMany(ctx, cond.Filters, data)
+
+	_, err := colObj.UpdateMany(ctx, cond.Filters, bson.D{{Key: "$set", Value: *TransSetUpdate(data)}})
 	return err
 }

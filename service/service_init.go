@@ -17,17 +17,20 @@ func WebService() *gin.Engine {
 	api.GET("/ping", Ping)
 	api.POST("/login", Login)
 	api.GET("/userinfo", UserInfo)
-	api.POST("/projects", ProjectList)
+
+	api.POST("/projects/search", ProjectList)
+	api.POST("/projects", CreateProject)
 	api.GET("/projects/:projectid", ProjectDetail)
 
 	api.POST("/accounts/search", QueryAccountList)
 	api.POST("/accounts", CreateAccount)
 	api.DELETE("/accounts", DeleteAccount)
+	api.GET("/accounts/info", AccountInfo)
 	api.PUT("/accounts/:accountid", UpdateAccount)
 	api.PUT("/accounts/:accountid/changepass", ChangeAccountPassword)
 
 	commonApi := api.Group("/common")
 	commonApi.GET("/publickey", GetPublicKey)
-
+	commonApi.POST("/register/action", RegisterAction)
 	return router
 }

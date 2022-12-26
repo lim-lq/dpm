@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/lim-lq/dpm/core"
+	"github.com/lim-lq/dpm/core/log"
 	"github.com/lim-lq/dpm/metadata"
 	"github.com/lim-lq/dpm/utils"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 type Account struct {
@@ -20,6 +20,12 @@ type Account struct {
 	Enabled     bool   `json:"enable" bson:"enable"`
 	IsSuperuser bool   `json:"is_superuser" bson:"is_supersor"`
 	IsAdmin     bool   `json:"is_admin" bson:"is_admin"`
+}
+
+type AccountInfo struct {
+	*Account `json:",inline"`
+	Roles    []string               `json:"roles"`
+	Actions  []PrivilegeActionModel `json:"actions"`
 }
 
 type RoleModel struct {
@@ -36,18 +42,22 @@ type RolesAccountsModel struct {
 
 // 权限记录模型
 type PrivilegeRecordModel struct {
-	ItemId    int64 `json:"itemid" bson:"itemid"` // 记录用户或者角色的id
-	ProjectId int64 `json:"projectid" bson:"projectid"`
-	ActionId  int64 `json:"actionid" bson:"actionid"`
+	BaseModel  `json:",inline" bson:",inline"`
+	ItemId     int64 `json:"itemid" bson:"itemid"`         // 记录用户或者角色的id
+	ResourceId int64 `json:"resourceid" bson:"resourceid"` // 资源ID，0为所有资源
+	ActionId   int64 `json:"actionid" bson:"actionid"`
 }
 
 // 权限动作模型
 type PrivilegeActionModel struct {
-	BaseModel `json:",inline" bson:",inline"`
-	Name      string `json:"name" bson:"name"`
-	Desc      string `json:"desc" bson:"desc"`
-	CateEn    string `json:"cate_en" bson:"cate_en"` // 类别英文描述
-	CateCh    string `json:"cate_ch" bson:"cate_ch"` // 类别中文描述
+	BaseModel    `json:",inline" bson:",inline"`
+	Name         string `json:"name" bson:"name"`
+	Desc         string `json:"desc" bson:"desc"`
+	CateEn       string `json:"cate_en" bson:"cate_en"`             // 类别英文描述
+	CateCh       string `json:"cate_ch" bson:"cate_ch"`             // 类别中文描述
+	NeedResource bool   `json:"need_resource" bson:"need_resource"` // 是否需要资源绑定
+	Method       string `json:"method" bson:"method"`               // http 方法
+	Url          string `json:"url" bson:"url"`                     // 接口url
 }
 
 var colName = "account"
@@ -76,8 +86,8 @@ func (a *Account) Create(ctx context.Context) error {
 	}
 	a.Id = seqId
 	a.Enabled = true
-	a.CreateTime = time.Now()
-	a.UpdateTime = time.Now()
+	a.CreateTime.Time = time.Now()
+	a.UpdateTime.Time = time.Now()
 	return mongocli.InsertOne(ctx, colName, a)
 }
 
@@ -91,6 +101,30 @@ func (a *Account) GetList(ctx context.Context, cond *metadata.Condition) ([]Acco
 	accList := []Account{}
 	err := mongocli.FindAll(ctx, colName, cond, &accList)
 	return accList, err
+}
+
+func (a *Account) GetInfoByUsername(ctx context.Context, username string) (*AccountInfo, error) {
+	cond := metadata.Condition{
+		Filters: metadata.Filters{"username": username},
+	}
+	return a.GetInfo(ctx, &cond)
+}
+
+func (a *Account) GetInfoById(ctx context.Context, id int64) (*AccountInfo, error) {
+	cond := metadata.Condition{
+		Filters: metadata.Filters{"id": id},
+	}
+	return a.GetInfo(ctx, &cond)
+}
+
+func (a *Account) GetInfo(ctx context.Context, cond *metadata.Condition) (*AccountInfo, error) {
+	err := core.GetMongoClient().FindOne(ctx, colName, cond, a)
+	if err != nil {
+		return nil, err
+	}
+	// 获取角色相关actions
+	log.Logger.Info(a.CreateTime.Local())
+	return &AccountInfo{Account: a}, nil
 }
 
 func (a *Account) Update(ctx context.Context, data metadata.MapStr) error {
@@ -111,16 +145,13 @@ func (a *Account) Update(ctx context.Context, data metadata.MapStr) error {
 	}
 	cond.Filters = metadata.Filters{"id": a.Id}
 
-	return mongocli.Update(ctx, colName, &cond, bson.D{{Key: "$set", Value: *TransSetUpdate(data)}})
+	return mongocli.Update(ctx, colName, &cond, data)
 }
 
 func (a *Account) ChangePassword(ctx context.Context, cipher string) error {
 	mongocli := core.GetMongoClient()
 	cond := metadata.Condition{Filters: metadata.Filters{"id": a.Id}}
-	return mongocli.Update(ctx, colName, &cond, bson.D{
-		{Key: "$set", Value: bson.D{
-			{Key: "password", Value: cipher},
-		}}})
+	return mongocli.Update(ctx, colName, &cond, metadata.MapStr{"password": cipher})
 }
 
 func (a *Account) SearchByName(ctx context.Context, username string) error {
@@ -133,4 +164,43 @@ func (a *Account) SearchByName(ctx context.Context, username string) error {
 		},
 	}
 	return mongocli.FindOne(ctx, colName, cond, a)
+}
+
+func (pa *PrivilegeActionModel) Update(ctx context.Context, actions []metadata.MapStr) error {
+	var err error
+	var newId int64
+	mongocli := core.GetMongoClient()
+	colString := "privilege_action"
+	actionNames := []string{}
+	for _, action := range actions {
+		cond := metadata.Condition{Filters: metadata.Filters{"name": action["name"]}}
+		actionObj := PrivilegeActionModel{}
+		err = mongocli.FindOne(ctx, colString, &cond, &actionObj)
+		action["updateTime"] = time.Now()
+		// 存在
+		if err == nil {
+			err = mongocli.Update(ctx, colString, &cond, action)
+			if err != nil {
+				return err
+			}
+		} else {
+			// 不存在
+			newId, err = mongocli.NextSequence(ctx, colString)
+			if err != nil {
+				return err
+			}
+			action["id"] = newId
+			action["createTime"] = time.Now()
+			err = mongocli.InsertOne(ctx, colString, action)
+			if err != nil {
+				return err
+			}
+		}
+		actionNames = append(actionNames, action["name"].(string))
+	}
+	// 清除多余的
+	cond := metadata.Condition{
+		Filters: metadata.Filters{"name": map[string][]string{"$nin": actionNames}},
+	}
+	return mongocli.Delete(ctx, colString, &cond)
 }
