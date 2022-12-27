@@ -42,6 +42,24 @@ func (p *ProjectModel) GetList(ctx context.Context, cond *metadata.Condition) ([
 	return projects, err
 }
 
+func (p *ProjectModel) GetPageList(ctx context.Context, cond *metadata.Condition) (*metadata.PageData, error) {
+	projects, err := p.GetList(ctx, cond)
+	if err != nil {
+		return nil, err
+	}
+	mongocli := core.GetMongoClient()
+	totalCount, err := mongocli.Count(ctx, projectCol, cond)
+	if err != nil {
+		return nil, err
+	}
+	return &metadata.PageData{
+		TotalCount: totalCount,
+		Data:       projects,
+		PageNo:     cond.Offset/cond.Limit + 1,
+		PageSize:   cond.Limit,
+	}, err
+}
+
 func (p *ProjectModel) GetDetail(ctx context.Context, cond *metadata.Condition) error {
 	db := core.GetMongoClient()
 	return db.FindOne(ctx, projectCol, cond, p)

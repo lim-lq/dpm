@@ -27,6 +27,16 @@ func ResponseOK(c *gin.Context, msg interface{}) {
 	baseResponse(c, http.StatusOK, msg, 0)
 }
 
+func ResponseList(c *gin.Context, msg metadata.PageData) {
+	c.JSON(http.StatusOK, metadata.PageListResponse{
+		BaseResponse: metadata.BaseResponse{
+			Code:   0,
+			Status: "success",
+		},
+		Info: msg,
+	})
+}
+
 func ResponseError(c *gin.Context, msg interface{}, errcode int64) {
 	baseResponse(c, http.StatusOK, msg, errcode)
 }

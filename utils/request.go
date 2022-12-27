@@ -13,12 +13,13 @@ var timeFileds = map[string]bool{
 }
 
 func DealListCondition(c *gin.Context) (*metadata.Condition, error) {
-	cond := new(metadata.Condition)
-	err := c.BindJSON(cond)
+	request := new(metadata.PageRequest)
+	err := c.BindJSON(request)
 	if err != nil {
 		return nil, err
 	}
-	for key, value := range cond.Filters {
+	cond := new(metadata.Condition)
+	for key, value := range request.Filters {
 		if _, ok := timeFileds[key]; ok {
 			switch value.(type) {
 			case string:
@@ -30,7 +31,11 @@ func DealListCondition(c *gin.Context) (*metadata.Condition, error) {
 				}
 				cond.Filters[key] = tf
 			}
+		} else {
+			cond.Filters[key] = value
 		}
 	}
+	cond.Limit = request.PageSize
+	cond.Offset = (request.PageNo - 1) * request.PageSize
 	return cond, nil
 }

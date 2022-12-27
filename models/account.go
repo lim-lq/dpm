@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/lim-lq/dpm/core"
-	"github.com/lim-lq/dpm/core/log"
 	"github.com/lim-lq/dpm/metadata"
 	"github.com/lim-lq/dpm/utils"
 )
@@ -118,13 +117,47 @@ func (a *Account) GetInfoById(ctx context.Context, id int64) (*AccountInfo, erro
 }
 
 func (a *Account) GetInfo(ctx context.Context, cond *metadata.Condition) (*AccountInfo, error) {
-	err := core.GetMongoClient().FindOne(ctx, colName, cond, a)
+	mongocli := core.GetMongoClient()
+	err := mongocli.FindOne(ctx, colName, cond, a)
 	if err != nil {
 		return nil, err
 	}
-	// 获取角色相关actions
-	log.Logger.Info(a.CreateTime.Local())
-	return &AccountInfo{Account: a}, nil
+	actions := []PrivilegeActionModel{}
+	if !a.IsAdmin {
+		// 获取角色相关actions
+		cond := metadata.Condition{
+			Filters: metadata.Filters{"accountid": a.Id},
+		}
+		rolesAccounts := []RolesAccountsModel{}
+		err = mongocli.FindAll(ctx, "roles_accounts", &cond, &rolesAccounts)
+		if err != nil {
+			return nil, err
+		}
+		for _, rc := range rolesAccounts {
+			// 获取角色对应的actions
+			cond = metadata.Condition{
+				Filters: metadata.Filters{"itemid": rc.RoleId},
+			}
+			records := []PrivilegeRecordModel{}
+			err = mongocli.FindAll(ctx, "privilege_record", &cond, &records)
+			if err != nil {
+				return nil, err
+			}
+			for _, pr := range records {
+				// 获取action名字
+				cond = metadata.Condition{
+					Filters: metadata.Filters{"id": pr.ActionId},
+				}
+				action := PrivilegeActionModel{}
+				err = mongocli.FindOne(ctx, "privilege_action", &cond, action)
+				if err != nil {
+					return nil, err
+				}
+				actions = append(actions, action)
+			}
+		}
+	}
+	return &AccountInfo{Account: a, Actions: actions}, nil
 }
 
 func (a *Account) Update(ctx context.Context, data metadata.MapStr) error {

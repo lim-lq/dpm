@@ -17,11 +17,11 @@ func ProjectList(c *gin.Context) {
 		utils.ResponseError(c, fmt.Sprintf("Post data parse error - %v", err), 1)
 		return
 	}
-	projects, err := models.ProjectManager().GetList(c, cond)
+	result, err := models.ProjectManager().GetPageList(c, cond)
 	if err != nil {
 		utils.ResponseError(c, fmt.Sprintf("Get project list error - %v", err), 1)
 	} else {
-		utils.ResponseOK(c, projects)
+		utils.ResponseList(c, *result)
 	}
 }
 

@@ -6,14 +6,15 @@ type BaseResponse struct {
 }
 
 type PageData struct {
-	Limit  int64         `json:"limig"`
-	Offset int64         `json:"offset"`
-	Info   []interface{} `json:"info"`
+	PageNo     int64       `json:"pageNo"`
+	PageSize   int64       `json:"pageSize"`
+	TotalCount int64       `json:"totalCount"`
+	Data       interface{} `json:"data"`
 }
 
-type ListResponse struct {
+type PageListResponse struct {
 	BaseResponse `json:",inline"`
-	PageData     `json:",inline"`
+	Info         PageData `json:"info"`
 }
 
 type Response struct {

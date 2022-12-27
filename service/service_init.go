@@ -10,6 +10,7 @@ func WebService() *gin.Engine {
 	router := gin.Default()
 	config := cors.DefaultConfig()
 	config.AllowAllOrigins = true
+	config.AddAllowHeaders("Authorization")
 	router.Use(cors.New(config))
 
 	api := router.Group("/api")

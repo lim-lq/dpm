@@ -1,6 +1,7 @@
 package log
 
 import (
+	"fmt"
 	"log"
 	"os"
 )
@@ -17,21 +18,24 @@ func InitLogger() {
 }
 
 func (l *logManager) Info(msg interface{}) {
-	l.logHandler.Println(msg)
+	l.logHandler.Output(2, fmt.Sprintln(msg))
 }
 
 func (l *logManager) Warn(msg interface{}) {
-	l.logHandler.Println(msg)
+	l.logHandler.Output(2, fmt.Sprintln(msg))
 }
 
 func (l *logManager) Error(msg interface{}) {
-	l.logHandler.Println(msg)
+	l.logHandler.Output(2, fmt.Sprintln(msg))
 }
 
 func (l *logManager) Fatal(msg interface{}) {
-	l.logHandler.Fatalln(msg)
+	l.logHandler.Output(2, fmt.Sprintln(msg))
+	os.Exit(1)
 }
 
 func (l *logManager) Fatalf(format string, msg interface{}) {
 	l.logHandler.Fatalf(format, msg)
+	l.logHandler.Output(2, fmt.Sprintf(format, msg))
+	os.Exit(1)
 }
