@@ -72,7 +72,18 @@ const user = {
           //   // 覆盖响应体的 role, 供下游使用
           //   result.role = role
 
-          commit('SET_ROLES', result.actions)
+          const permissions = {}
+          result.actions.forEach(element => {
+            if (permissions[element.cate_en] === undefined) {
+              permissions[element.cate_en] = {
+                permissionId: element.cate_en,
+                needResource: element.need_resource,
+                actionList: []
+              }
+            }
+            permissions[element.cate_en].actionList.push(element.name)
+          })
+          commit('SET_ROLES', Object.values(permissions))
           commit('SET_INFO', result)
           commit('SET_NAME', { name: result.name, welcome: welcome() })
           commit('SET_AVATAR', '/avatar2.jpg')

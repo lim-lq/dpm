@@ -37,5 +37,7 @@ export default {
     'menu.account.trigger': '触发报错',
     'menu.account.logout': '退出登录',
     'menu.project': '项目',
-    'menu.project.list': '项目列表'
+    'menu.project.list': '项目列表',
+    'menu.user': '用户',
+    'menu.user.list': '用户列表'
 }

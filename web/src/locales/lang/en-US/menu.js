@@ -37,5 +37,7 @@ export default {
     'menu.account.trigger': 'Trigger Error',
     'menu.account.logout': 'Logout',
     'menu.project': 'Project',
-    'menu.project.list': 'ProjectList'
+    'menu.project.list': 'ProjectList',
+    'menu.user': 'User',
+    'menu.user.list': 'UserList'
 }

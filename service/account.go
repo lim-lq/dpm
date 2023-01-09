@@ -13,19 +13,18 @@ import (
 )
 
 func QueryAccountList(c *gin.Context) {
-	cond := metadata.Condition{}
-	err := c.ShouldBind(&cond)
+	cond, err := utils.DealListCondition(c)
 	if err != nil {
 		utils.ResponseError(c, fmt.Sprintf("解析参数失败: %v", err), errcode.PARSE_PARAMETER_ERROR)
 		return
 	}
 	account := models.AccountManager()
-	accList, err := account.GetList(c, &cond)
+	result, err := account.GetPageList(c, cond)
 	if err != nil {
 		utils.ResponseError(c, fmt.Sprintf("查询账号失败: %v", err), errcode.GET_ACCOUNT_ERROR)
 		return
 	}
-	utils.ResponseOK(c, accList)
+	utils.ResponseList(c, *result)
 }
 
 func CreateAccount(c *gin.Context) {

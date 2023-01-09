@@ -48,13 +48,28 @@ export const asyncRouterMap = [
         path: '/project',
         redirect: '/project/list',
         component: RouteView,
-        meta: { title: 'menu.project', icon: 'form', permission: ['PROJECT.QUERY'] },
+        meta: { title: 'menu.project', icon: 'form', permission: ['PROJECT'] },
         children: [
           {
             path: '/project/list',
             name: 'ProjectList',
             component: () => import('@/views/project/ProjectList'),
-            meta: { title: 'menu.project.list', keepAlive: true, permission: ['PROJECT.QUERY'] }
+            meta: { title: 'menu.project.list', keepAlive: true, permission: ['PROJECT'] }
+          }
+        ]
+      },
+      // username
+      {
+        path: '/user',
+        redirect: '/user/list',
+        component: RouteView,
+        meta: { title: 'menu.user', icon: 'form', permission: ['USER'] },
+        children: [
+          {
+            path: '/user/list',
+            name: 'UserList',
+            component: () => import('@/views/user/UserList'),
+            meta: { title: 'menu.user.list', keepAlive: true, permission: ['USER'] }
           }
         ]
       },

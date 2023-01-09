@@ -6,7 +6,8 @@
 
     <div class="table-operator">
       <a-button type="primary" icon="plus" @click="handleAddProject">新建</a-button>
-      <a-dropdown v-action:edit v-if="selectedRowKeys.length > 0">
+      <a-button icon="reload" @click="refresh">刷新</a-button>
+      <a-dropdown v-action:edit v-if="selectedRowKeys.length > 0" :trigger="['click']">
         <a-menu slot="overlay" @click="e => handleBatchOpClick(e)">
           <a-menu-item key="1"><a-icon type="delete" />删除</a-menu-item>
           <!-- lock | unlock -->
@@ -33,51 +34,51 @@
       <span slot="desc" slot-scope="text">
         <ellipsis :length="30" tooltip>{{ text }}</ellipsis>
       </span>
-
-      <!-- <span slot="action" slot-scope="text, record">
-        <template>
-          <a @click="handleEdit(record)">配置</a>
-          <a-divider type="vertical" />
-          <a @click="handleSub(record)">订阅报警</a>
-        </template>
-      </span> -->
+      <span slot="isAdmin" slot-scope="text">
+        <a-tag v-if="text" color="#87d068">是</a-tag>
+        <a-tag v-else color="orange">否</a-tag>
+      </span>
     </s-table>
   </a-card>
 </template>
 
 <script>
 import { STable, Ellipsis } from '@/components'
-import { getProjectList } from '@/api/project'
+import { getUserList } from '@/api/user'
 
 const statusMap = {
-  'active': {
+  'true': {
     status: 'success',
     text: '激活'
   },
-  'archive': {
+  'false': {
     status: 'error',
-    text: '归档'
+    text: '禁用'
   }
 }
 
 export default {
-  name: 'ProjectList',
+  name: 'UserList',
   data () {
     return {
       columns: [
         {
-          title: '项目名',
-          dataIndex: 'name'
+          title: '用户名',
+          dataIndex: 'username'
         },
         {
           title: '状态',
-          dataIndex: 'status',
+          dataIndex: 'enable',
           scopedSlots: { customRender: 'status' }
         },
         {
-          title: '描述',
-          dataIndex: 'desc',
-          scopedSlots: { customRender: 'desc' }
+          title: '昵称',
+          dataIndex: 'nickname'
+        },
+        {
+          title: '管理员',
+          dataIndex: 'is_admin',
+          scopedSlots: { customRender: 'isAdmin' }
         },
         {
           title: '创建时间',
@@ -94,7 +95,7 @@ export default {
         console.log(parameter)
         const requestParameters = Object.assign({}, parameter, { 'filters': this.queryParam })
         console.log('loadData request parameters:', requestParameters)
-        return getProjectList(requestParameters)
+        return getUserList(requestParameters)
           .then(res => {
             console.log(res)
             return res.info
@@ -119,13 +120,16 @@ export default {
   },
   filters: {
     statusFilter (type) {
-      return statusMap[type].text
+      return statusMap[String(type)].text
     },
     statusTypeFilter (type) {
-      return statusMap[type].status
+      return statusMap[String(type)].status
     }
   },
   methods: {
+    refresh () {
+      this.$refs.table.refresh()
+    },
     onSelectChange (selectedRowKeys, selectedRows) {
       this.selectedRowKeys = selectedRowKeys
       this.selectedRows = selectedRows

@@ -102,6 +102,24 @@ func (a *Account) GetList(ctx context.Context, cond *metadata.Condition) ([]Acco
 	return accList, err
 }
 
+func (a *Account) GetPageList(ctx context.Context, cond *metadata.Condition) (*metadata.PageData, error) {
+	accounts, err := a.GetList(ctx, cond)
+	if err != nil {
+		return nil, err
+	}
+	mongocli := core.GetMongoClient()
+	totalCount, err := mongocli.Count(ctx, colName, cond)
+	if err != nil {
+		return nil, err
+	}
+	return &metadata.PageData{
+		TotalCount: totalCount,
+		Data:       accounts,
+		PageNo:     cond.Offset/cond.Limit + 1,
+		PageSize:   cond.Limit,
+	}, err
+}
+
 func (a *Account) GetInfoByUsername(ctx context.Context, username string) (*AccountInfo, error) {
 	cond := metadata.Condition{
 		Filters: metadata.Filters{"username": username},
