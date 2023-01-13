@@ -20,6 +20,8 @@ import './core/lazy_use' // use lazy load components
 import './permission' // permission control
 import './utils/filter' // global filter
 import './global.less' // global style
+import { FormModel } from 'ant-design-vue'
+Vue.use(FormModel)
 
 Vue.config.productionTip = false
 

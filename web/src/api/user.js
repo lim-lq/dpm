@@ -7,3 +7,11 @@ export function getUserList (postData) {
     data: postData
   })
 }
+
+export function createUserList (postData) {
+  return request({
+    url: '/accounts',
+    method: 'post',
+    data: postData
+  })
+}

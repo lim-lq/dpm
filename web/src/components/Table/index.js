@@ -167,6 +167,7 @@ export default {
           this.localPagination = this.showPagination && Object.assign({}, this.localPagination, {
             current: r.pageNo, // 返回结果中的当前分页数
             total: r.totalCount, // 返回结果中的总记录数
+            showTotal: (total, range) => `共 ${total} 条`,
             showSizeChanger: this.showSizeChanger,
             pageSize: (pagination && pagination.pageSize) ||
               this.localPagination.pageSize
