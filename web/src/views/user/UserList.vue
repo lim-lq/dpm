@@ -35,7 +35,7 @@
           <a-tag v-if="text" color="#87d068">是</a-tag>
           <a-tag v-else color="orange">否</a-tag>
         </span>
-        <template slot="operation" slot-scope="record">
+        <template slot="operation" slot-scope="text, record">
           <a-tooltip placement="right">
             <template slot="title">
               <span>编辑</span>
@@ -47,13 +47,13 @@
     </a-card>
     <!-- BEGIN 创建账号 modal -->
     <a-modal
-      :visible="addUserModalVisible"
+      :visible="userModalVisible"
       :maskCloseable="false"
-      :confirmLoading="addUserLoading"
+      :confirmLoading="userLoading"
       width="50%"
       title="创建用户"
       @ok="createUser"
-      @cancel="addUserModalVisible = false"
+      @cancel="userModalVisible = false"
     >
       <a-form-model
         :model="userForm"
@@ -67,7 +67,7 @@
         <a-form-model-item label="用户名" prop="username">
           <a-input v-model="userForm.username"></a-input>
         </a-form-model-item>
-        <a-form-model-item label="密码" prop="password">
+        <a-form-model-item v-if="userModalType === 'add'" label="密码" prop="password">
           <a-input-password v-model="userForm.password"></a-input-password>
         </a-form-model-item>
         <a-form-model-item label="昵称" prop="nickname">
@@ -166,9 +166,10 @@ export default {
       projectList: [],
       selectedRowKeys: [],
       selectedRows: [],
-      // 添加用户
-      addUserModalVisible: false,
-      addUserLoading: false,
+      // 添加编辑用户
+      userModalVisible: false,
+      userLoading: false,
+      userModalType: 'add',
       userForm: {
         username: undefined,
         nickname: undefined,
@@ -222,14 +223,11 @@ export default {
       this.selectedRows = selectedRows
     },
     handleAddUser () {
-      this.addUserModalVisible = true
-      this.addUserLoading = false
+      this.userModalVisible = true
+      this.userLoading = false
     },
     handleBatchOpClick (e) {
       console.log(e)
-    },
-    handleEditUser (record) {
-
     },
     createUser () {
       this.$refs.userForm.validate(valid => {
@@ -238,7 +236,7 @@ export default {
             this.$message.error('没有通信密钥，请刷新后重试')
             return
           }
-          this.addUserLoading = true
+          this.userLoading = true
           const postData = Object.assign({}, this.userForm)
           var encrypt = new JSEncrypt()
           encrypt.setPublicKey(this.pubkey)
@@ -251,16 +249,22 @@ export default {
               this.$message.error(`创建用户失败: ${resp.info}`)
             } else {
               this.$message.info('创建成功')
-              this.addUserModalVisible = false
+              this.userModalVisible = false
               this.refresh()
             }
-            this.addUserLoading = false
+            this.userLoading = false
           }).catch(err => {
             this.$message.error(`创建用户失败: ${err}`)
-            this.addUserLoading = false
+            this.userLoading = false
           })
         }
       })
+    },
+    handleEditUser (record) {
+      console.log(record)
+      this.userForm = record
+      this.userModalType = 'edit'
+      this.userModalVisible = true
     }
   }
 }
